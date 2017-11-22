@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 9a2730e29c052c1418e5dc4bd3c6c315
+timeCreated: 1509165806
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Seattle Sans
+  fontNames:
+  - Seattle Sans
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

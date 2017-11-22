@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 4d8444c2b1031b842ab90208351e14a2
+timeCreated: 1509165784
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Portland
+  fontNames:
+  - Portland
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
