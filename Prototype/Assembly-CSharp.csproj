@@ -48,22 +48,22 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\agents\PlayerController.cs" />
      <Compile Include="Assets\Scripts\agents\TagStrings.cs" />
-     <Compile Include="Assets\Scripts\agents\action.cs" />
      <Compile Include="Assets\Scripts\agents\actionSequence.cs" />
      <Compile Include="Assets\Scripts\agents\bridgePolicy.cs" />
-     <Compile Include="Assets\Scripts\agents\fallBridgePolicy.cs" />
      <Compile Include="Assets\Scripts\agents\pathfinder.cs" />
      <Compile Include="Assets\Scripts\agents\tpf0Behavior.cs" />
      <Compile Include="Assets\Scripts\agents\tpf1Behavior.cs" />
-     <Compile Include="Assets\Scripts\agents\walkAction.cs" />
-     <Compile Include="Assets\Scripts\agents\walkRightAgent.cs" />
      <Compile Include="Assets\Scripts\environment\edgePlatformData.cs" />
      <Compile Include="Assets\Scripts\environment\levelGraph.cs" />
      <Compile Include="Assets\Scripts\environment\platformData.cs" />
      <Compile Include="Assets\Scripts\upDown.cs" />
      <Compile Include="Assets\Scripts\util\PhysicsUtil.cs" />
+     <Compile Include="Assets\Scripts\util\TestController.cs" />
      <Compile Include="Assets\Scripts\util\fallMovement.cs" />
+     <Compile Include="Assets\Scripts\util\jumpMovement.cs" />
+     <Compile Include="Assets\Scripts\util\movement.cs" />
      <Compile Include="Assets\Scripts\util\movementManager.cs" />
+     <Compile Include="Assets\Scripts\util\traversalMovement.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

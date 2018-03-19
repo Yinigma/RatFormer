@@ -8,33 +8,68 @@ public class movementManager : MonoBehaviour {
     private const float MINMOVE = 0.0001f;
     private const float SHELLSIZE = 0.01f;
     private const int HITLIMIT = 20;
+    public const float CASTDISTANCE = 10;
 
+    [SerializeField]
+    private ContactFilter2D contactFilter;
+    [SerializeField]
+    private MonoBehaviour[] rawMoves;
+
+    private movement[] moves;
     private RaycastHit2D[] cBuff;
-    private Vector2 hitNorm;
-    private Vector2 nextVelocity;
+    private Vector2 nextMovement;
     private Rigidbody2D objCollider;
-    bool hasHit;
 
-    void Awake()
+    public struct managerState
     {
-        hitNorm = Vector2.zero;
+        public bool hasHit;
+        public Vector2 hitNorm;
+
+        public bool HasHit { get { return hasHit; } }
+        public Vector2 HitNorm { get { return hitNorm; } }
+    }
+
+    private managerState state;
+
+    void Start()
+    {
         objCollider = GetComponent<Rigidbody2D>();
         cBuff = new RaycastHit2D[1];
-        hasHit = false;
+        state.hasHit = false;
+        state.hitNorm = Vector2.zero;
+        moves = new movement[rawMoves.Length];
+        for (int i = 0; i < rawMoves.Length; i++)
+        {
+            moves[i] = (movement)rawMoves[i];
+        }
     }
 
     void Update()
     {
-        //So we need to add all the movement vectors together
-        //Maybe we can handle this with events?
+        nextMovement = Vector2.zero;
+        for(int i = 0; i<moves.Length; i++)
+        {
+            nextMovement += moves[i].nextMovement(state);
+        }
+        Debug.DrawLine(objCollider.position, objCollider.position + 10*nextMovement, Color.magenta);
+        //handleCollisions(ref nextMovement);
+        redirect();
+        Debug.DrawLine(objCollider.position, objCollider.position + 10*nextMovement, Color.cyan);
+        objCollider.position += nextMovement;
+        if (state.HasHit)
+        {
+            Debug.DrawLine(objCollider.position, state.HitNorm + objCollider.position);
+        }
     }
 
     //Given a displacement vector and a collider, this method will change the displacement such that it moves
-    //corretly in the environment and return a normal vector in the direction it should be moving 
-    public Vector2 handleCollisions(ref Vector2 inMov, ContactFilter2D contactFilter)
+    //corretly in the environment and return a normal vector in the direction it should be moving
+    //Let this be a lesson as to why I should name my variables well and not document like a putz
+    public Vector2 handleCollisions(ref Vector2 inMov)
     {
-
         Vector2 norm = inMov.normalized;
+        bool hit = false;
+        Vector2 hitNorm = Vector2.zero;
 
         if (inMov.magnitude > MINMOVE)
         {
@@ -49,7 +84,7 @@ public class movementManager : MonoBehaviour {
 
             int numHits;
             int passes = 0;
-            bool hit;
+            
 
             do
             {
@@ -58,10 +93,14 @@ public class movementManager : MonoBehaviour {
                 * RAYCAST INTO THE SCENE ONLY TEST FURTHER IF THE RAY ACTUALLY HITS
                 * /////////////////////////////////////////////////////////////////
                 */
-                numHits = objCollider.Cast(movement, contactFilter, cBuff);
-                hit = false;
+                numHits = objCollider.Cast(movement, contactFilter, cBuff, CASTDISTANCE);
                 cMove = movement;
                 moveNorm = movement.normalized;
+
+                //clear until proven to be trying to ram into something
+                hit = false;
+                state.hasHit = false;
+
                 if (numHits > 0)
                 {
                     //get data
@@ -83,6 +122,7 @@ public class movementManager : MonoBehaviour {
 
                         //We need to remember this
                         hit = true;
+                        state.hasHit = true;
 
                         //subtract
                         toHit -= inShell;
@@ -101,7 +141,6 @@ public class movementManager : MonoBehaviour {
 
                         if (passes > 0 && Vector2.Dot(hitNorm, prevNorm) <= 0)
                         {
-                            Debug.Log("Acute corner");
 
                             //Kill movement
                             movement = Vector2.zero;
@@ -128,24 +167,77 @@ public class movementManager : MonoBehaviour {
             inMov = Vector2.zero;
         }
 
+        state.hitNorm = hitNorm;
+
         return norm;
     }
 
-    public Vector2 CorrectMovement(ref Vector2 vel, Rigidbody2D rb2d, ContactFilter2D contactFilter)
+    public void redirect()
     {
-        if (vel.magnitude > 0)
+        state.hasHit = false;
+        state.hitNorm = Vector2.zero;
+
+        //Set up the context of the problem
+        int numHits = 0;
+        Vector2 loopMovement = nextMovement;
+        Vector2 initPos = objCollider.position;
+
+        Vector2 prevNorm = Vector2.zero;
+        int hitCounter = 0;
+        bool collision;
+
+        do //a collision check
         {
-            Vector2 curMove = vel * Time.deltaTime;
-            Vector2 velNorm = handleCollisions(ref curMove, contactFilter);
-            if (curMove == Vector2.zero)
+            collision = false;
+            float moveMag = loopMovement.magnitude;
+
+            if (loopMovement.magnitude >= MINMOVE)
             {
-                vel = Vector2.zero;
-                return curMove;
+                numHits = objCollider.Cast(loopMovement, contactFilter, cBuff, CASTDISTANCE);
+
+                if (numHits > 0)
+                {
+                    Vector2 hitNorm = cBuff[0].normal;
+                    float hitDistance = cBuff[0].distance;
+
+                    Vector2 moveNorm = loopMovement.normalized;
+                    float shelldist = -SHELLSIZE / Vector2.Dot(moveNorm, hitNorm);
+
+                    //This is the actual hit condition. Only register a hit when it's the correct distance
+                    if (hitDistance <= moveMag + shelldist)
+                    {
+                        collision = true;
+                        state.hasHit = true;
+                        state.hitNorm = hitNorm;
+                        float remainingDistance = hitDistance - shelldist;
+
+                        //reset loop movement to what we'll need to test for the next iteration
+                        Vector2 tangent = new Vector2(hitNorm.y, -hitNorm.x);
+                        loopMovement = (moveMag-remainingDistance)* Vector2.Dot(tangent, moveNorm) * tangent;
+
+                        objCollider.position += moveNorm * remainingDistance;
+
+                        //This is to kill movement in accute corners so it doesn't loop infinitely
+                        if (hitCounter > 0 && Vector2.Dot(hitNorm, prevNorm) <= 0)
+                        {
+                            loopMovement = Vector2.zero;
+                            state.hitNorm = (hitNorm + prevNorm).normalized;
+                        }
+
+                        prevNorm = hitNorm;
+                        hitCounter++;
+                    }
+
+                }
             }
-            vel = Vector2.Dot(vel, velNorm) * velNorm;
-            Debug.DrawLine(rb2d.position, rb2d.position + vel, Color.cyan);
-            return curMove;
+            else
+            {
+                loopMovement = Vector2.zero; 
+            }
         }
-        return Vector2.zero;
+        while (collision);//the collider is hitting something
+
+        nextMovement = objCollider.position - initPos + loopMovement;
+        objCollider.position = initPos;
     }
 }

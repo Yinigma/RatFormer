@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour {
         //Set up movement vars
         //Why are these not constants? Because maybe I'd like to change them later, Jenkins. Sheesh.
         gravity = 2 * maxJump / (maxTime * maxTime);
+
         //Fuck man, dudes on the internet are dumb
         jumpSpeed = 2*maxJump/maxTime;
         rb2d = GetComponent<Rigidbody2D>();
